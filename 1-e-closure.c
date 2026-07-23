@@ -19,7 +19,7 @@ void display(int n) {
 
 int main() {
     FILE *INPUT;
-    INPUT = fopen("automata.txt", "r");
+    INPUT = fopen("1-automata.txt", "r");
     char state[3];
     int end, i = 0, n, k = 0;
     char state1[3], input[3], state2[3];
