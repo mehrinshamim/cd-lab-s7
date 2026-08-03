@@ -1,0 +1,6 @@
+int a=25;
+float num=100;
+if(a>10)
+{
+    a=a+1;
+}
