@@ -1,71 +1,124 @@
 #include <stdio.h>
-#include <string.h>
 
 #define MAX 10
 
-int n;
-int trans[MAX][2][MAX];
-int visited[100];
-int queue[100];
-int front = 0, rear = 0;
+int n, m;
+char symbols[MAX];
+int trans[MAX][MAX][MAX];
+int accepting[MAX];
 
-int main()
-{
+int dfaStates[1 << MAX][MAX];
+int dfaTrans[1 << MAX][MAX];
+int dfaAccept[1 << MAX];
+int dfaCount = 0;
+
+int isSameState(int a[MAX], int b[MAX]) {
+    for (int i = 0; i < n; i++) {
+        if (a[i] != b[i]) return 0;
+    }
+    return 1;
+}
+
+int findDFAState(int subset[MAX]) {
+    for (int i = 0; i < dfaCount; i++) {
+        if (isSameState(dfaStates[i], subset)) return i;
+    }
+    return -1;
+}
+
+int main() {
     int i, j, k;
 
     printf("Enter number of states: ");
     scanf("%d", &n);
 
-    printf("Enter transition table\n");
+    printf("Enter number of input symbols: ");
+    scanf("%d", &m);
+    printf("Enter symbols (space separated): ");
+    for (i = 0; i < m; i++) scanf(" %c", &symbols[i]);
 
-    for(i = 0; i < n; i++)
-    {
-        for(j = 0; j < 2; j++)
-        {
-            printf("State %d Input %d\n", i, j);
-
-            for(k = 0; k < n; k++)
-            {
+    printf("Enter transition matrices (0/1) for each symbol:\n");
+    for (k = 0; k < m; k++) {
+        printf("Symbol %c:\n", symbols[k]);
+        for (i = 0; i < n; i++)
+            for (j = 0; j < n; j++)
                 scanf("%d", &trans[i][j][k]);
-            }
-        }
     }
 
-    queue[rear++] = 1;
+    printf("Enter accepting states (enter -1 to stop): ");
+    for (i = 0; i < n; i++) accepting[i] = 0;
+    while (1) {
+        int s;
+        scanf("%d", &s);
+        if (s == -1) break;
+        if (s >= 0 && s < n) accepting[s] = 1;
+    }
 
-    while(front < rear)
-    {
-        int current = queue[front++];
+    int startState[MAX] = {0};
+    startState[0] = 1;
 
-        if(visited[current])
-            continue;
+    for (i = 0; i < n; i++) dfaStates[0][i] = startState[i];
+    dfaCount = 1;
 
-        visited[current] = 1;
+    for (int current = 0; current < dfaCount; current++) {
 
-        printf("\nSubset %d\n", current);
+        dfaAccept[current] = 0;
+        for (i = 0; i < n; i++) {
+            if (dfaStates[current][i] && accepting[i]) {
+                dfaAccept[current] = 1;
+                break;
+            }
+        }
 
-        for(j = 0; j < 2; j++)
-        {
-            int next = 0;
+        for (k = 0; k < m; k++) {
+            int newSet[MAX] = {0};
 
-            for(i = 0; i < n; i++)
-            {
-                if(current & (1 << i))
-                {
-                    for(k = 0; k < n; k++)
-                    {
-                        if(trans[i][j][k])
-                            next |= (1 << k);
+            for (i = 0; i < n; i++) {
+                if (dfaStates[current][i]) {
+                    for (j = 0; j < n; j++) {
+                        if (trans[i][j][k]) newSet[j] = 1;
                     }
                 }
             }
 
-            printf("Input %d -> %d\n", j, next);
-
-            if(!visited[next])
-                queue[rear++] = next;
+            int idx = findDFAState(newSet);
+            if (idx == -1) {
+                for (i = 0; i < n; i++) dfaStates[dfaCount][i] = newSet[i];
+                idx = dfaCount++;
+            }
+            dfaTrans[current][k] = idx;
         }
     }
+
+    printf("\n--- DFA RESULTS ---\n");
+    printf("Total DFA States: %d\n\n", dfaCount);
+
+    printf("DFA States mapping:\n");
+    for (i = 0; i < dfaCount; i++) {
+        printf("q%d = { ", i);
+        int empty = 1;
+        for (j = 0; j < n; j++) {
+            if (dfaStates[i][j]) {
+                printf("q%d ", j);
+                empty = 0;
+            }
+        }
+        if (empty) printf("∅ ");
+        printf("}\n");
+    }
+
+    printf("\nTransitions:\n");
+    for (i = 0; i < dfaCount; i++) {
+        for (k = 0; k < m; k++) {
+            printf("δ(q%d, %c) = q%d\n", i, symbols[k], dfaTrans[i][k]);
+        }
+    }
+
+    printf("\nAccepting states: ");
+    for (i = 0; i < dfaCount; i++) {
+        if (dfaAccept[i]) printf("q%d ", i);
+    }
+    printf("\n");
 
     return 0;
 }

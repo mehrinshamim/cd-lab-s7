@@ -1,53 +1,45 @@
-#include<stdio.h>
-#include<string.h>
+#include <stdio.h>
 
-char result[20][20], copy[3], states[20][20];
+int n;
+int eps[10][10];
+int visited[10];
 
-void add_state(char a[3], int i) {
-    strcpy(result[i], a);
-}
+void dfs(int state) {
+    visited[state] = 1;
 
-void display(int n) {
-    int k = 0;
-    printf("\n Epsilon closure of %s = { ", copy);
-    while (k < n) {
-        printf(" %s", result[k]);
-        k++;
+    for (int j = 0; j < n; j++) {
+        if (eps[state][j] == 1 && visited[j] == 0) {
+            dfs(j);
+        }
     }
-    printf(" }\n");
 }
 
 int main() {
-    FILE *INPUT;
-    INPUT = fopen("1-automata.txt", "r");
-    char state[3];
-    int end, i = 0, n, k = 0;
-    char state1[3], input[3], state2[3];
+    int i, j;
 
-    printf("\n Enter the no of states: ");
-    scanf("%d",&n);
-    printf("\n Enter the states (max 20) \n");
-    for (k = 0; k < n; k++) {
-        scanf("%s", states[k]);
+    printf("Enter number of states: ");
+    scanf("%d", &n);
+
+    printf("Enter epsilon transition matrix (%dx%d):\n", n, n);
+
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            scanf("%d", &eps[i][j]);
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++)
+            visited[j] = 0;
+
+        dfs(i);
+
+        printf("Epsilon-Closure(q%d) = { ", i);
+
+        for (j = 0; j < n; j++)
+            if (visited[j])
+                printf("q%d ", j);
+
+        printf("}\n");
     }
 
-    for (k = 0; k < n; k++) {
-        i = 0;
-        strcpy(state, states[k]);
-        strcpy(copy, state);
-        add_state(state, i++);
-        while (1) {
-            end = fscanf(INPUT, "%s%s%s", state1, input, state2);
-            if (end == EOF) break;
-            if (strcmp(state, state1) == 0) {
-                if (strcmp(input, "e") == 0) {
-                    add_state(state2, i++);
-                    strcpy(state, state2);
-                }
-            }
-        }
-        display(i);
-        rewind(INPUT);
-    }
     return 0;
 }
